@@ -313,16 +313,18 @@ var mineSweeper = function () {
 
     function stepOnCell(cell) {
         if (gameState == minesweeperEnums.gameState.ongoing){
-            if (cell.isBomb) {
-                gameState = minesweeperEnums.gameState.failure;
-                drawGrid(gameState);
-            }
-            else {
-                setCellVisible(cell);
-                drawCell(cell);
-                if(isVictory()){
-                    gameState = minesweeperEnums.gameState.victory;
+            if (!cell.isAlert) {
+                if (cell.isBomb) {
+                    gameState = minesweeperEnums.gameState.failure;
                     drawGrid(gameState);
+                }
+                else {
+                    setCellVisible(cell);
+                    drawCell(cell);
+                    if(isVictory()){
+                        gameState = minesweeperEnums.gameState.victory;
+                        drawGrid(gameState);
+                    }
                 }
             }
         }
