@@ -5,13 +5,17 @@ var mineSweeper = function () {
     this.canvasContext = null;
     this.dificultySelected = null;
     this.gameState = null;
+    this.mouseTimer = '';
+    this.isMouseTimerExec = false;
 
     const minesweeperConfig = Object.freeze({
         bombChar: "o",
+        alertChar: "!",
         canvasName: "mineSweeperCanvas",
         font: "Arial Black",
         //font: "Verdana"
         isVisibleStart: false,
+        setAlertTimerDelay: 400,
     });
 
     const minesweeperEnums = Object.freeze({
@@ -31,6 +35,7 @@ var mineSweeper = function () {
             empty6: "#038081",
             empty7: "#000000",
             empty8: "#808080",
+            alert: "#606060",
         }),
 
         bgColors: Object.freeze({
@@ -55,6 +60,7 @@ var mineSweeper = function () {
             this.posX = posX;
             this.posY = posY;
             this.isVisible = isVisible;
+            this.isAlert = false;
             this.isBomb = isBomb;
         }
 
@@ -124,7 +130,8 @@ var mineSweeper = function () {
         canvas.posY = 0;
         grid = new minesweeperObjects.gamegrid(rows, columns, cellSize, dificultySelected);
         canvasContext = canvas.getContext("2d");
-        canvas.onmouseup = canvasMouseClick;
+        canvas.onmouseup = canvasMouseClickUp;
+        canvas.onmousedown = canvasMouseClickDown;
         gameState = minesweeperEnums.gameState.ongoing;
         drawGrid();
     }
@@ -204,6 +211,25 @@ var mineSweeper = function () {
                 unhideNearbyEmptyCells(cell);
             }
         }
+        else
+        {
+            if (cell.isAlert) {
+
+                canvasContext.beginPath();
+                canvasContext.textAlign = "center"
+                canvasContext.font = "" + (grid.cellSize) + "px " + minesweeperConfig.font;
+                canvasContext.fillStyle = minesweeperEnums.fontColors.alert;
+
+                textContent = minesweeperConfig.alertChar;
+
+                canvasContext.fillText(
+                    textContent,
+                    cell.posX * grid.cellSize + grid.cellSize / 2,
+                    cell.posY * grid.cellSize + grid.cellSize - 2);
+
+                canvasContext.stroke();
+            }
+        }
     }
 
     function setCellVisible(cell){
@@ -228,11 +254,6 @@ var mineSweeper = function () {
             }
         }
         return count;
-    }
-
-    function canvasMouseClick(e) {
-        cell = getCellByGridPosition(e.offsetX, e.offsetY);
-        stepOnCell(cell);
     }
 
     function getCellByGridPosition(posX, posY) {
@@ -305,6 +326,28 @@ var mineSweeper = function () {
                 }
             }
         }
+    }
+
+    function setCellToAlert(cell) {
+        if (gameState == minesweeperEnums.gameState.ongoing){
+            cell.isAlert = !cell.isAlert;
+            drawCell(cell);
+        }
+    }
+
+    function canvasMouseClickUp(e) {
+        clearTimeout(mouseTimer);
+        if (!isMouseTimerExec) {
+            stepOnCell(getCellByGridPosition(e.offsetX, e.offsetY));
+        }
+    }
+
+    function canvasMouseClickDown(e) {
+        isMouseTimerExec = false;
+        mouseTimer = setTimeout(function(){
+            isMouseTimerExec = true;
+            setCellToAlert(getCellByGridPosition(e.offsetX, e.offsetY));
+        }, minesweeperConfig.setAlertTimerDelay);
     }
 
     return {
